@@ -141,6 +141,7 @@ namespace UnityEditor.Polybrush
 
             // used for fill mode
             public Dictionary<PolyEdge, List<int>> TriangleLookup;
+            public OverlayRenderer TempComponent;
         }
 
 		// how many applications it should take to reach the full strength
@@ -492,7 +493,11 @@ namespace UnityEditor.Polybrush
             if(SystemInfo.supportsComputeShaders)
                 data.MeshVertexColors.DisposeBuffers();
 
-            m_EditableObjectsData.Remove(target);
+            if (m_EditableObjectsData.ContainsKey(target))
+            {
+                DestroyImmediate(m_EditableObjectsData[target].TempComponent);
+                m_EditableObjectsData.Remove(target);
+            }
         }
 
 		// Called every time the brush should apply itself to a valid target.  Default is on mouse move.
@@ -505,6 +510,39 @@ namespace UnityEditor.Polybrush
 
             base.OnBrushApply(target, settings);
 		}
+        protected override void CreateTempComponent(EditableObject target)
+        {
+            if (target == null)
+                return;
+
+            OverlayRenderer ren = target.gameObjectAttached.AddComponent<OverlayRenderer>();
+            ren.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
+            ren.SetMesh(target.editMesh);
+
+            ren.fullColor = s_FullStrengthColor;
+            ren.gradient = s_BrushGradientColor;
+
+            EditableObjectData data;
+            if (!m_EditableObjectsData.TryGetValue(target, out data))
+            {
+                data = new EditableObjectData();
+                m_EditableObjectsData.Add(target, data);
+            }
+            data.TempComponent = ren;
+        }
+
+        protected override void UpdateTempComponent(BrushTarget target, BrushSettings settings)
+        {
+            if (!Util.IsValid(target))
+                return;
+
+            EditableObjectData data;
+            if (m_EditableObjectsData.TryGetValue(target.editableObject, out data))
+            {
+                if (data.TempComponent != null)
+                    ((OverlayRenderer)data.TempComponent).SetWeights(target.GetAllWeights(), settings.strength);
+            }
+        }
 
         /// <summary>
         /// set mesh colors back to their original state before registering for undo
