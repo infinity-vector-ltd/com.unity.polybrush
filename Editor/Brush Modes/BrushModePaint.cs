@@ -507,7 +507,7 @@ namespace UnityEditor.Polybrush
             vertexColorInfo.ApplyColors();
 			target.editableObject.editMesh.colors = vertexColorInfo.OriginalColors;
             target.editableObject.modifiedChannels |= MeshChannel.Color;
-
+            RebuildCaches(target.editableObject, settings);
             base.OnBrushApply(target, settings);
 		}
         protected override void CreateTempComponent(EditableObject target)

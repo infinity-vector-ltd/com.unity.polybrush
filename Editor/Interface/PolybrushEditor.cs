@@ -666,11 +666,6 @@ namespace UnityEditor.Polybrush
             }
 
 
-            if (m_ApplyingBrush)
-            {
-                if (GUIUtility.hotControl == controlID && e.button == 0)
-                    ApplyBrush(Event.current.control, Event.current.shift && Event.current.type != EventType.ScrollWheel);
-            }
 
             // foreach(var secondaryBrushTarget in m_SecondaryBrushTargets)
             // {
